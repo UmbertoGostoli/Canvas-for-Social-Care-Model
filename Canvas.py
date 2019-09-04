@@ -250,24 +250,6 @@ def updateCanvas(n, year, textUpdateList, houses):
                                         tags = 'redraw')
             femalePixel += fWidth
     
-    
-    
-    ## Draw in the display house and the people who live in it
-    
-#    if len(displayHouse.occupants) < 1:
-#        ## Nobody lives in the display house any more, choose another
-#        if nextDisplayHouse != None:
-#            displayHouse = nextDisplayHouse
-#            nextDisplayHouse = None
-#        else:
-#            displayHouse = random.choice(pop.livingPeople).house
-#            self.textUpdateList.append(str(self.year) + ": Display house empty, going to " + self.displayHouse.name + ".")
-#            messageString = "Residents: "
-#            for k in self.displayHouse.occupants:
-#                messageString += "#" + str(k.id) + " "
-#            self.textUpdateList.append(messageString)
-    
-    # print 'House size: ' + str(houseData.loc[houseData['year'] == year, 'size'].values[0])
     size = houseData.loc[houseData['year'] == year, 'size'].values[0]
     colorIndex = -1
     if size == 0:
@@ -360,26 +342,6 @@ def drawPerson(age, ageBracket, counter, careClass, sex, idNumber):
                        anchor='nw',
                        tags='redraw')
 
-def from_IDs_to_Agents(pop, space):
-    for person in pop.allPeople:
-        if person.motherID != -1:
-            person.mother = [x for x in pop.allPeople if x.id == person.motherID][0]
-        else:
-            person.mother = None
-        if person.fatherID != -1:
-            person.father = [x for x in pop.allPeople if x.id == person.fatherID][0]
-        else:
-            person.father = None
-            
-        person.children = [x for x in pop.allPeople if x.id in person.childrenID]
-        
-    for person in pop.allPeople:
-        person.house = [x for x in space.allHouses if x.id == person.houseID][0]
-        if person in pop.livingPeople:
-            person.house.occupants.append(person)
-            
-    return pop
-
 def onclickButton1(evt):
     yearLog = []
     
@@ -387,15 +349,6 @@ def onclickButton1(evt):
     
     for i in range(periods):
         startYear = time.time()
-        
-#        pop = popSim[i] #popID = pickle.load(open(directoryPop + '/save.p_' + str(year), 'rb')) # 
-#        space = mapSim[i] # space = pickle.load(open(directoryMap + '/save.m_' + str(year), 'rb')) #
-#        pop = from_IDs_to_Agents(popID, space)
-#        if i == 0:
-#            initializeCanvas(year, pop, space)
-#            
-#        pyramid.update(year, p['num5YearAgeClasses'], p['numCareLevels'], p['pixelsInPopPyramid'], pop.livingPeople)
-        
         year = i + initialYear
         yearLog.extend(list(log.loc[log['year'] == year, 'message']))
         updateCanvas(i, year, yearLog, houses)
@@ -423,7 +376,7 @@ if __name__ == "__main__":
     button1 = Tkinter.Button(window, text='start')
     button1.config(height=2, width=10)
     button1.bind("<Button-1>", onclickButton1)
-    button2 = Tkinter.Button(window, text='stop', command=window.destroy)
+    button2 = Tkinter.Button(window, text='delete', command=window.destroy)
     button2.config(height=2, width=10)
     canvas.create_window(950, 30 + 10, window=button1)
     canvas.create_window(950, 30 + 60, window=button2)
