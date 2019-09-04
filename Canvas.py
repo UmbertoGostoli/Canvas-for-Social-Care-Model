@@ -388,7 +388,7 @@ if __name__ == "__main__":
     startYear = time.time()
     
     initialYear = 1860
-    policyFolder = 'N:/Social Care Model for QQR/Simulations_Folder/2019_09_02-13_02_10/Rep_0/Scenario_0/Policy_0'
+    policyFolder = 'Outputs'
     outputs = pd.read_csv(policyFolder + '/Outputs.csv', sep=',', header=0)
     log = pd.read_csv(policyFolder + '/Log.csv', sep=',', header=0)
     houseData = pd.read_csv(policyFolder + '/HouseData.csv', sep=',', header=0)
