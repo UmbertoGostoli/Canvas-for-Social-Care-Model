@@ -11,11 +11,14 @@ from house import House
 from house import Town
 from house import Map
 import Tkinter
+import tkFont as tkfont
 import pylab
 import pandas as pd
+import numpy as np
 import os
 import time
-import pickle
+
+
 
 
 def init_params():
@@ -29,8 +32,8 @@ def init_params():
     p['pixelsPerTown'] = 56
     p['mapGridXDimension'] = 8
     p['mapGridYDimension'] = 12
-    p['careLevelColour'] = ['blue','green','yellow','orange','red']
-    p['houseSizeColour'] = ['blue','green','yellow','orange','red', 'lightgrey']
+    p['careLevelColour'] = ['deepskyblue','green','yellow','orange','red']
+    p['houseSizeColour'] = ['deepskyblue','green','yellow','orange','red', 'lightgrey']
     p['mainFont'] = 'Helvetica 18'
     p['fontColour'] = 'white'
     p['dateX'] = 70
@@ -38,7 +41,7 @@ def init_params():
     p['popX'] = 70
     p['popY'] = 50
     p['delayTime'] = 0.0
-    p['maxTextUpdateList'] = 22
+    p['maxTextUpdateList'] = 12
     
     return p
 
@@ -73,7 +76,7 @@ class PopPyramid:
                 self.femaleData[a,c] = pixelFactor * self.femaleData[a,c] / total
 
 
-def initializeCanvas(year):
+def initializeCanvas(year, initialUnmetCareNeed, initialmaxPublicCareCost):
     """Put up a TKInter canvas window to animate the simulation."""
     canvas.pack()
     
@@ -124,11 +127,11 @@ def initializeCanvas(year):
             canvas.itemconfig(h, state='normal')
             
     canvas.update()
-    updateCanvas(0, year, ['Events Log'], houses)
+    updateCanvas(0, year, ['Events Log'], houses, [initialUnmetCareNeed], [initialmaxPublicCareCost])
     
     return houses
 
-def updateCanvas(n, year, textUpdateList, houses):
+def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare):
     """Update the appearance of the graphics canvas."""
     
     ## First we clean the canvas off; some items are redrawn every time and others are not
@@ -157,46 +160,96 @@ def updateCanvas(n, year, textUpdateList, houses):
 
     ## Also some other stats, but not on the first display
     if year > p['startYear']:
-        canvas.create_text(350,20, 
-                           text='Avg household: ' + str(round(outputs.loc[outputs['year'] == year, 'averageHouseholdSize'].values[0], 2)),
+        bold_font = tkfont.Font(family="Helvetica", size=11, weight="bold")
+        canvas.create_text(380,20, 
+                           text='Avg household: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,20, 
+                           text=str(round(outputs.loc[outputs['year'] == year, 'averageHouseholdSize'].values[0], 2)),
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,40,     
-                           text='Marriages: ' + str(outputs.loc[outputs['year'] == year, 'marriageTally'].values[0]),
+        
+        canvas.create_text(380,40,     
+                           text='Marriages: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,40,     
+                           text=str(outputs.loc[outputs['year'] == year, 'marriageTally'].values[0]),
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,60,
-                           text='Divorces: ' + str(outputs.loc[outputs['year'] == year, 'divorceTally'].values[0]),
+        
+        canvas.create_text(380,60,
+                           text='Divorces: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,60,
+                           text=str(outputs.loc[outputs['year'] == year, 'divorceTally'].values[0]),
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,100,
-                           text='Total care need: ' + str(round(outputs.loc[outputs['year'] == year, 'totalSocialCareNeed'].values[0],0)),
+        
+        canvas.create_text(380,100,
+                           text='Total care need: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,100,
+                           text=str(round(outputs.loc[outputs['year'] == year, 'totalSocialCareNeed'].values[0],0)),
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,120,
-                           text='Num taxpayers: ' + str(round(outputs.loc[outputs['year'] == year, 'taxPayers'].values[0],0)),
+        
+        canvas.create_text(380,120,
+                           text='Num taxpayers: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,120,
+                           text=str(round(outputs.loc[outputs['year'] == year, 'taxPayers'].values[0],0)),
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,140,
-                           text='Family care ratio: ' + str(round(100.0*outputs.loc[outputs['year'] == year, 'familyCareRatio'].values[0],0)) + "%",
+        
+        canvas.create_text(380,140,
+                           text='Family care ratio: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,140,
+                           text=str(round(100.0*outputs.loc[outputs['year'] == year, 'familyCareRatio'].values[0],0)) + "%",
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,160,
-                           text='Tax burden: ' + str(round(outputs.loc[outputs['year'] == year, 'taxBurden'].values[0],0)),
+        
+        canvas.create_text(380,160,
+                           text='Tax burden: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,160,
+                           text=str(round(outputs.loc[outputs['year'] == year, 'taxBurden'].values[0],0)),
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
-        canvas.create_text(350,180,
-                           text='Marriage prop: ' + str(round(100.0*outputs.loc[outputs['year'] == year, 'marriagePropNow'].values[0],0)) + "%",
+        
+        canvas.create_text(380,180,
+                           text='Marriage prop: ',
+                           font = bold_font,
+                           fill = 'white',
+                           tags = 'redraw')
+        canvas.create_text(480,180,
+                           text=str(round(100.0*outputs.loc[outputs['year'] == year, 'marriagePropNow'].values[0],0)) + "%",
                            font = 'Helvetica 11',
                            fill = 'white',
                            tags = 'redraw')
+        
+        
     
     occupiedHouses = []
     outlineColour = []
@@ -210,7 +263,7 @@ def updateCanvas(n, year, textUpdateList, houses):
             if size > 4:
                 colorIndex = 4
             else:
-                colorIndex = size
+                colorIndex = size-1
         outlineColour.append(p['houseSizeColour'][colorIndex])
         fillColour.append(p['houseSizeColour'][colorIndex])
         if row['size'] > 0:
@@ -250,6 +303,8 @@ def updateCanvas(n, year, textUpdateList, houses):
                                         tags = 'redraw')
             femalePixel += fWidth
     
+    
+    
     size = houseData.loc[houseData['year'] == year, 'size'].values[0]
     colorIndex = -1
     if size == 0:
@@ -258,12 +313,12 @@ def updateCanvas(n, year, textUpdateList, houses):
         if size > 4:
             colorIndex = 4
         else:
-            colorIndex = size
+            colorIndex = size-1
     outlineColour = p['houseSizeColour'][colorIndex]
-    canvas.create_rectangle(50, 450, 300, 650,
+    canvas.create_rectangle(1050, 450, 1275, 650,
                             outline = outlineColour,
                             tags = 'redraw' )
-    canvas.create_text (60, 660,
+    canvas.create_text (1050, 660,
                         text="Display house " + houseData.loc[houseData['year'] == year, 'House name'].values[0],
                         font='Helvetica 10',
                         fill='white',
@@ -303,15 +358,152 @@ def updateCanvas(n, year, textUpdateList, houses):
                            width = 265,
                            tags = 'redraw')
         baseY += 30
+    
+    # Create box for charts
+    
+    # Graph 1
+    canvas.create_rectangle(25, 450, 275, 650,
+                            outline = 'white',
+                            tags = 'redraw' )
+    
+    yearXPositions = [51, 104, 157, 210, 262]
+    
+    for i in range(5):
+        canvas.create_line (yearXPositions[i], 650, yearXPositions[i], 652, fill='white')
+    
+    
+    labs = ['1880', '1920', '1960', '2000', '2040']
+    for i in range(5):
+        canvas.create_text (yearXPositions[i]-14, 655,
+                            text= str(labs[i]),
+                            font='Helvetica 10',
+                            fill='white',
+                            anchor='nw',
+                            tags='redraw')
+    
 
+    yLabels = ['2', '4', '6', '8', '10', '12']
+    
+    valueYPositions = []
+    for i in range(6):
+        n = float(2000*(i+1))
+        valueYPositions.append(650-180*(n/maxUnmetCareNeed))
+    
+    for i in range(6):
+        canvas.create_line (25, valueYPositions[i], 23, valueYPositions[i], fill='white')
+    
+    for i in range(6):
+        indent = 12
+        if i > 3:
+            indent = 8
+        canvas.create_text (indent, valueYPositions[i]-8,
+                            text= yLabels[i],
+                            font='Helvetica 10',
+                            fill='white',
+                            anchor='nw',
+                            tags='redraw')
+    
+    canvas.create_text (25, 433,
+                        text="e^3",
+                        font='Helvetica 10',
+                        fill='white',
+                        anchor='nw',
+                        tags='redraw')
+    
+    bold_font = tkfont.Font(family="Helvetica", size=10, weight="bold")
+    canvas.create_text (95, 430,
+                        text="Unmet Care Need",
+                        font=bold_font,
+                        fill='white',
+                        anchor='nw',
+                        tags='redraw')
+    
+    
+    
+    if len(unmetCareNeed) > 1:
+        for i in range(1, len(unmetCareNeed)):
+            xStart = 25 + (float(i-1)/float(finalYear-initialYear))*(275-25)
+            yStart = 650 - (float(unmetCareNeed[i-1])/float(maxUnmetCareNeed))*(630-450)
+            xEnd = 25 + (float(i)/float(finalYear-initialYear))*(275-25)
+            yEnd = 650 - (unmetCareNeed[i]/maxUnmetCareNeed)*(630-450)
+            canvas.create_line(xStart, yStart, xEnd, yEnd, fill="red")
+            
+            
+    
+    # Graph 2
+    canvas.create_rectangle(325, 450, 575, 650,
+                            outline = 'white',
+                            tags = 'redraw' )
+    
+    yearXPositions = [351, 404, 457, 510, 562]
+    
+    for i in range(5):
+        canvas.create_line (yearXPositions[i], 650, yearXPositions[i], 652, fill='white')
+    
+    
+    labs = ['1880', '1920', '1960', '2000', '2040']
+    for i in range(5):
+        canvas.create_text (yearXPositions[i]-14, 655,
+                            text= str(labs[i]),
+                            font='Helvetica 10',
+                            fill='white',
+                            anchor='nw',
+                            tags='redraw')
+        
+    yLabels = ['15', '30', '45', '60', '75', '90']
+    
+    valueYPositions = []
+    for i in range(6):
+        n = float(15000*(i+1))
+        valueYPositions.append(650-180*(n/maxPublicCareCost))
+    
+    for i in range(6):
+        canvas.create_line (325, valueYPositions[i], 323, valueYPositions[i], fill='white')
+    
+    for i in range(6):
+        canvas.create_text (306, valueYPositions[i]-8,
+                            text= yLabels[i],
+                            font='Helvetica 10',
+                            fill='white',
+                            anchor='nw',
+                            tags='redraw')
+        
+    canvas.create_text (325, 433,
+                        text="e^3",
+                        font='Helvetica 10',
+                        fill='white',
+                        anchor='nw',
+                        tags='redraw')
+    
+    
+    canvas.create_text (395, 430,
+                        text="Cost of Public Care",
+                        font=bold_font,
+                        fill='white',
+                        anchor='nw',
+                        tags='redraw')
+    
+    if len(costPublicCare) > 1:
+        for i in range(1, len(costPublicCare)):
+            xStart = 325 + (float(i-1)/float(finalYear-initialYear))*(575-325)
+            # print 'x0 = ' + str(xStart)
+            yStart = 650 - (float(costPublicCare[i-1])/float(maxPublicCareCost))*(630-450)
+            # print 'y0 = ' + str(yStart)
+            xEnd = 325 + (float(i)/float(finalYear-initialYear))*(575-325)
+            # print 'x1 = ' + str(xEnd)
+            yEnd = 650 - (costPublicCare[i]/maxPublicCareCost)*(630-450)
+            # print 'y1 = ' + str(yEnd)
+            canvas.create_line(xStart, yStart, xEnd, yEnd, fill="red")
+    
+    
     ## Finish by updating the canvas and sleeping briefly in order to allow people to see it
     canvas.update()
     if p['delayTime'] > 0.0:
         time.sleep(p['delayTime'])
 
 def drawPerson(age, ageBracket, counter, careClass, sex, idNumber):
-    baseX = 70 + ( counter * 30 )
-    baseY = 620 - ( ageBracket * 30 )
+    baseX = 1100 + ( counter * 30 ) # 70
+    baseY = 590 - ( ageBracket * 30 ) # 620
 
     fillColour = p['careLevelColour'][careClass]
 
@@ -344,14 +536,17 @@ def drawPerson(age, ageBracket, counter, careClass, sex, idNumber):
 
 def onclickButton1(evt):
     yearLog = []
-    
+    unmetCareNeeds = []
+    costPublicCare = []
     timeOnStart = time.time()
     
     for i in range(periods):
         startYear = time.time()
         year = i + initialYear
         yearLog.extend(list(log.loc[log['year'] == year, 'message']))
-        updateCanvas(i, year, yearLog, houses)
+        unmetCareNeeds.append(outputs.loc[outputs['year'] == year, 'totalUnmetSocialCareNeed'].values[0])
+        costPublicCare.append(outputs.loc[outputs['year'] == year, 'costPublicSocialCare'].values[0])
+        updateCanvas(i, year, yearLog, houses, unmetCareNeeds, costPublicCare)
         
         endYear = time.time()
         
@@ -416,10 +611,17 @@ if __name__ == "__main__":
         fileName = '/DataMap_' + str(year) + '.csv'
         mapData.append(pd.read_csv(mapFolder + fileName, sep=',', header=0))
     
+    finalYear = 2050
+    maxUnmetCareNeed = max(outputs["totalUnmetSocialCareNeed"].tolist())
+    maxPublicCareCost = max(outputs["costPublicSocialCare"].tolist())
+
+    initialUnmetCareNeed = outputs.loc[outputs['year'] == initialYear, 'totalUnmetSocialCareNeed'].values[0]
+    initialmaxPublicCareCost = outputs.loc[outputs['year'] == initialYear, 'costPublicSocialCare'].values[0]
+    
     endYear = time.time()
     print 'Time to load data: ' + str(endYear - startYear)
     
-    houses = initializeCanvas(initialYear)
+    houses = initializeCanvas(initialYear, initialUnmetCareNeed, initialmaxPublicCareCost)
     
 #    yearLog = []
 #    for i in range(periods):
