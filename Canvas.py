@@ -33,7 +33,9 @@ def init_params():
     p['mapGridXDimension'] = 8
     p['mapGridYDimension'] = 12
     p['careLevelColour'] = ['deepskyblue','green','yellow','orange','red']
-    p['houseSizeColour'] = ['deepskyblue','green','yellow','orange','red', 'lightgrey']
+    p['careDemandInHours'] = [ 0.0, 12.0, 24.0, 48.0, 96.0 ]
+    p['unmetNeedColor'] = ['deepskyblue','green','yellow','orange','red', 'mediumorchid']
+    p['houseSizeColour'] = ['deepskyblue','green','yellow','orange','red', 'mediumorchid']
     p['mainFont'] = 'Helvetica 18'
     p['fontColour'] = 'white'
     p['dateX'] = 70
@@ -105,7 +107,13 @@ def initializeCanvas(year, initialUnmetCareNeed, initialmaxPublicCareCost):
         xOffset = xBasic + 2 + (row['x']*2)
         yOffset = yBasic + 2 + (row['y']*2)
         
-        outlineColour = fillColour = p['houseSizeColour'][row['size']]
+        unmetNeedCat = 5
+        for i in range(len(p['careDemandInHours'])-1):
+            if row['unmetNeed'] >= p['careDemandInHours'][i] and row['unmetNeed'] < p['careDemandInHours'][i+1]:
+                unmetNeedCat = i
+                break
+                
+        outlineColour = fillColour = p['unmetNeedColor'][unmetNeedCat]
         width = 1
         if row['size'] > 0:
             occupiedHouses.append(1)
@@ -255,17 +263,15 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
     outlineColour = []
     fillColour = []
     for index, row in mapData[n].iterrows():
-        colorIndex = -1
-        size = row['size']
-        if size == 0:
-            colorIndex = 5
-        else:
-            if size > 4:
-                colorIndex = 4
-            else:
-                colorIndex = size-1
-        outlineColour.append(p['houseSizeColour'][colorIndex])
-        fillColour.append(p['houseSizeColour'][colorIndex])
+        
+        unmetNeedCat = 5
+        for i in range(len(p['careDemandInHours'])-1):
+            if row['unmetNeed'] >= p['careDemandInHours'][i] and row['unmetNeed'] < p['careDemandInHours'][i+1]:
+                unmetNeedCat = i
+                break
+                
+        outlineColour.append(p['unmetNeedColor'][unmetNeedCat])
+        fillColour.append(p['unmetNeedColor'][unmetNeedCat])
         if row['size'] > 0:
             occupiedHouses.append(1)
         else:
@@ -583,7 +589,7 @@ if __name__ == "__main__":
     startYear = time.time()
     
     initialYear = 1860
-    policyFolder = 'Outputs'
+    policyFolder = 'Outputs_New'
     outputs = pd.read_csv(policyFolder + '/Outputs.csv', sep=',', header=0)
     log = pd.read_csv(policyFolder + '/Log.csv', sep=',', header=0)
     houseData = pd.read_csv(policyFolder + '/HouseData.csv', sep=',', header=0)
