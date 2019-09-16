@@ -388,17 +388,17 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
                             tags='redraw')
     
 
-    yLabels = ['2', '4', '6', '8', '10', '12']
+    yLabels = ['2', '4', '6', '8', '10', '12', '14']
     
     valueYPositions = []
-    for i in range(6):
+    for i in range(len(yLabels)):
         n = float(2000*(i+1))
         valueYPositions.append(650-180*(n/maxUnmetCareNeed))
     
-    for i in range(6):
+    for i in range(len(yLabels)):
         canvas.create_line (25, valueYPositions[i], 23, valueYPositions[i], fill='white')
     
-    for i in range(6):
+    for i in range(len(yLabels)):
         indent = 12
         if i > 3:
             indent = 8
@@ -456,17 +456,17 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
                             anchor='nw',
                             tags='redraw')
         
-    yLabels = ['15', '30', '45', '60', '75', '90']
+    yLabels = ['10', '20', '30', '40', '50', '60']
     
     valueYPositions = []
-    for i in range(6):
-        n = float(15000*(i+1))
+    for i in range(len(yLabels)):
+        n = float(10000*(i+1))
         valueYPositions.append(650-180*(n/maxPublicCareCost))
     
-    for i in range(6):
+    for i in range(len(yLabels)):
         canvas.create_line (325, valueYPositions[i], 323, valueYPositions[i], fill='white')
     
-    for i in range(6):
+    for i in range(len(yLabels)):
         canvas.create_text (306, valueYPositions[i]-8,
                             text= yLabels[i],
                             font='Helvetica 10',
