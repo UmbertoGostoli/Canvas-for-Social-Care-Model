@@ -25,15 +25,17 @@ def init_params():
     """Set up the simulation parameters."""
 
     p = OrderedDict()
-    p['startYear'] = 1860
+    p['startYear'] = 1855
     p['num5YearAgeClasses'] = 25
     p['numCareLevels'] = 5
     p['pixelsInPopPyramid'] = 2000
-    p['pixelsPerTown'] = 56
-    p['mapGridXDimension'] = 8
-    p['mapGridYDimension'] = 12
+    p['pixelsPerTown'] = 16 # 56
+    p['mapGridXDimension'] = 20
+    p['mapGridYDimension'] = 25
     p['careLevelColour'] = ['deepskyblue','green','yellow','orange','red']
-    p['houseSizeColour'] = ['deepskyblue','green','yellow','orange','red', 'lightgrey']
+    p['careDemandInHours'] = [ 0.0, 12.0, 24.0, 48.0, 96.0 ]
+    p['unmetNeedColor'] = ['deepskyblue','green','yellow','orange','red', 'mediumorchid']
+    p['houseSizeColour'] = ['deepskyblue','green','yellow','orange','red', 'mediumorchid']
     p['mainFont'] = 'Helvetica 18'
     p['fontColour'] = 'white'
     p['dateX'] = 70
@@ -90,8 +92,8 @@ def initializeCanvas(year, initialUnmetCareNeed, initialmaxPublicCareCost):
     ## Draw the overall map, including towns and houses (occupied houses only)
     for y in range(p['mapGridYDimension']):
         for x in range(p['mapGridXDimension']):
-            xBasic = 580 + (x * p['pixelsPerTown'])
-            yBasic = 15 + (y * p['pixelsPerTown'])
+            xBasic = 520 + (x * p['pixelsPerTown'])
+            yBasic = 20 + (y * p['pixelsPerTown'])
             canvas.create_rectangle(xBasic, yBasic,
                                     xBasic+p['pixelsPerTown'],
                                     yBasic+p['pixelsPerTown'],
@@ -100,12 +102,18 @@ def initializeCanvas(year, initialUnmetCareNeed, initialmaxPublicCareCost):
     houses = []
     occupiedHouses = []
     for index, row in mapData[0].iterrows():
-        xBasic = 580 + (row['town_x']*p['pixelsPerTown'])
-        yBasic = 15 + (row['town_y']*p['pixelsPerTown'])
+        xBasic = 520 + (row['town_x']*p['pixelsPerTown'])
+        yBasic = 20 + (row['town_y']*p['pixelsPerTown'])
         xOffset = xBasic + 2 + (row['x']*2)
         yOffset = yBasic + 2 + (row['y']*2)
         
-        outlineColour = fillColour = p['houseSizeColour'][row['size']]
+        unmetNeedCat = 5
+        for i in range(len(p['careDemandInHours'])-1):
+            if row['unmetNeed'] >= p['careDemandInHours'][i] and row['unmetNeed'] < p['careDemandInHours'][i+1]:
+                unmetNeedCat = i
+                break
+                
+        outlineColour = fillColour = p['unmetNeedColor'][unmetNeedCat]
         width = 1
         if row['size'] > 0:
             occupiedHouses.append(1)
@@ -255,17 +263,15 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
     outlineColour = []
     fillColour = []
     for index, row in mapData[n].iterrows():
-        colorIndex = -1
-        size = row['size']
-        if size == 0:
-            colorIndex = 5
-        else:
-            if size > 4:
-                colorIndex = 4
-            else:
-                colorIndex = size-1
-        outlineColour.append(p['houseSizeColour'][colorIndex])
-        fillColour.append(p['houseSizeColour'][colorIndex])
+        
+        unmetNeedCat = 5
+        for i in range(len(p['careDemandInHours'])-1):
+            if row['unmetNeed'] >= p['careDemandInHours'][i] and row['unmetNeed'] < p['careDemandInHours'][i+1]:
+                unmetNeedCat = i
+                break
+                
+        outlineColour.append(p['unmetNeedColor'][unmetNeedCat])
+        fillColour.append(p['unmetNeedColor'][unmetNeedCat])
         if row['size'] > 0:
             occupiedHouses.append(1)
         else:
@@ -382,17 +388,17 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
                             tags='redraw')
     
 
-    yLabels = ['2', '4', '6', '8', '10', '12']
+    yLabels = ['2', '4', '6', '8', '10', '12', '14']
     
     valueYPositions = []
-    for i in range(6):
-        n = float(2000*(i+1))
+    for i in range(len(yLabels)):
+        n = float(450*(i+1)) #n = float(2000*(i+1))
         valueYPositions.append(650-180*(n/maxUnmetCareNeed))
     
-    for i in range(6):
-        canvas.create_line (25, valueYPositions[i], 23, valueYPositions[i], fill='white')
+    for i in range(len(yLabels)):
+        canvas.create_line(25, valueYPositions[i], 23, valueYPositions[i], fill='white')
     
-    for i in range(6):
+    for i in range(len(yLabels)):
         indent = 12
         if i > 3:
             indent = 8
@@ -450,18 +456,18 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
                             anchor='nw',
                             tags='redraw')
         
-    yLabels = ['15', '30', '45', '60', '75', '90']
+    yLabels = ['20', '40', '60', '80', '100', '120']
     
     valueYPositions = []
-    for i in range(6):
-        n = float(15000*(i+1))
+    for i in range(len(yLabels)):
+        n = float(180000*(i+1)) # n = float(10000*(i+1))
         valueYPositions.append(650-180*(n/maxPublicCareCost))
     
-    for i in range(6):
+    for i in range(len(yLabels)):
         canvas.create_line (325, valueYPositions[i], 323, valueYPositions[i], fill='white')
     
-    for i in range(6):
-        canvas.create_text (306, valueYPositions[i]-8,
+    for i in range(len(yLabels)):
+        canvas.create_text (300, valueYPositions[i]-8,
                             text= yLabels[i],
                             font='Helvetica 10',
                             fill='white',
@@ -469,7 +475,7 @@ def updateCanvas(n, year, textUpdateList, houses, unmetCareNeed, costPublicCare)
                             tags='redraw')
         
     canvas.create_text (325, 433,
-                        text="e^3",
+                        text="e^4",
                         font='Helvetica 10',
                         fill='white',
                         anchor='nw',
@@ -582,8 +588,8 @@ if __name__ == "__main__":
     
     startYear = time.time()
     
-    initialYear = 1860
-    policyFolder = 'Outputs'
+    initialYear = 1855
+    policyFolder = 'Output_S'
     outputs = pd.read_csv(policyFolder + '/Outputs.csv', sep=',', header=0)
     log = pd.read_csv(policyFolder + '/Log.csv', sep=',', header=0)
     houseData = pd.read_csv(policyFolder + '/HouseData.csv', sep=',', header=0)
@@ -620,6 +626,10 @@ if __name__ == "__main__":
     
     endYear = time.time()
     print 'Time to load data: ' + str(endYear - startYear)
+    
+    print maxUnmetCareNeed
+    
+    print maxPublicCareCost
     
     houses = initializeCanvas(initialYear, initialUnmetCareNeed, initialmaxPublicCareCost)
     
